@@ -1,41 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, Button, Alert, Dimensions } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Button, TouchableOpacity, Dimensions, Alert, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+// import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { DrawerParamList } from '../navigation/types';
 
-const { width } = Dimensions.get('window');
-const imageSize = width * 0.4;
+type NavigationProps = DrawerNavigationProp<DrawerParamList>;
 
 const SettingsScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProps>();
   const { t, i18n } = useTranslation();
-  const [modalVisible, setModalVisible] = useState(false);
 
   const handleLogout = () => {
-    // Perform logout logic, then navigate to Login
+    // Your logout logic here
     navigation.navigate('Login' as never);
   };
 
   const handleChangeLanguage = () => {
-    // Example of a simple popup approach
+    // Example alert for language selection
     Alert.alert(t('selectLanguage'), '', [
       { text: t('english'), onPress: () => i18n.changeLanguage('en') },
       { text: t('hindi'), onPress: () => i18n.changeLanguage('hn') },
       { text: t('odia'), onPress: () => i18n.changeLanguage('or') },
-      { text: 'Cancel', style: 'cancel' }
+      { text: 'Cancel', style: 'cancel' },
     ]);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Bar with Log Off and Language Button */}
-      <View style={styles.topBar}>
-        <Button title={t('logout')} onPress={handleLogout} />
-        <Button title={t('language')} onPress={handleChangeLanguage} />
+      {/* Custom Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+          {/* <Ionicons name="menu" size={28} color="black" style={styles.hamburgerIcon} /> */}
+        </TouchableOpacity>
+        <View style={styles.rightButtons}>
+          {/* <Button title={t('logout')} onPress={handleLogout} /> */}
+          <Button title={t('language')} onPress={handleChangeLanguage} />
+        </View>
       </View>
 
-      {/* Profile Picture */}
+      {/* Rest of Settings Screen */}
       <View style={styles.profileContainer}>
         <Image
           source={{ uri: 'https://placekitten.com/400/400' }}
@@ -51,28 +57,38 @@ export default SettingsScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
-  topBar: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginRight: 16,
-    marginTop: 8
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  hamburgerIcon: {
+    // styling for hamburger icon if needed
+  },
+  rightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   profileContainer: {
     alignItems: 'center',
-    marginTop: 40
+    marginTop: 40,
   },
   profileImage: {
-    width: imageSize,
-    height: imageSize,
-    borderRadius: imageSize / 2,
+    width: Dimensions.get('window').width * 0.4,
+    height: Dimensions.get('window').width * 0.4,
+    borderRadius: (Dimensions.get('window').width * 0.4) / 2,
     borderWidth: 2,
-    borderColor: '#333'
+    borderColor: '#333',
   },
   text: {
     textAlign: 'center',
     marginTop: 16,
-    fontSize: 18
-  }
+    fontSize: 18,
+  },
 });

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '../store';
 import { fetchPosts } from '../store/postsSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import HorizontalProfileList from '../components/HorizontalProfileList';
 
 const HomeScreen = () => {
   const dispatch = useAppDispatch();
@@ -37,13 +38,14 @@ const HomeScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <HorizontalProfileList />
       <FlatList
         data={data}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
