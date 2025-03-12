@@ -1,0 +1,57 @@
+[
+    {
+      "id": "1",
+      "name": "Umiksha",
+      "image": "UserProfile.jpg",
+      "profileDetails": "Vedic doctor | 3+ Years Experience",
+      "profilePrice": "₹ 24/min",
+      "profileReviews": "★★★★★ (7007 orders)",
+      "icon": "faTrophy",
+      "description":
+        "Meet Umiksha, an experienced doctor passionate about assisting clients with spiritual guidance. Provides clarity, insight, and practical remedies.",
+    },
+    {
+      "id": "2",
+      "name": "Shreya",
+      "image": "UserProfile.jpg",
+      "profileDetails": "Ayurvedic Doctor | 2 Years Experience",
+      "profilePrice": "₹ 30/min",
+      "profileReviews": "★★★★☆ (5234 orders)",
+      "icon": "faStar",
+      "description":
+        "Shreya specializes in health reading and provides deep insights into your future with accurate predictions.",
+    },
+    {
+      "id": "3",
+      "name": "Joseph",
+      "image": "UserProfile.jpg",
+      "profileDetails": "Ayurvedic Doctor | 5 Years Experience",
+      "profilePrice": "₹ 40/min",
+      "profileReviews": "★★★★★ (8900 orders)",
+      "icon": "faHeart",
+      "description":
+        "Joseph is an expert in ayurvedic reading and has helped thousands find direction in life.",
+    },
+    {
+      "id": "4",
+      "name": "Ananya",
+      "image": "UserProfile.jpg",
+      "profileDetails": "Ayurvedic Doctor | 4 Years Experience",
+      "profilePrice": "₹ 35/min",
+      "profileReviews": "★★★★☆ (4120 orders)",
+      "icon": "faDumbbell",
+      "description":
+        "Ananya uses ayurvedic medicine to guide clients toward better life decisions and self-improvement.",
+    },
+    {
+      "id": "5",
+      "name": "Rahul",
+      "image": "UserProfile.jpg",
+      "profileDetails": "Ayurvedic Doctor | 6 Years Experience",
+      "profilePrice": "₹ 50/min",
+      "profileReviews": "★★★★★ (7200 orders)",
+      "icon": "faHeart",
+      "description":
+        "Rahul provides aurvedic consultation to align your home and office for prosperity and success.",
+    }
+  ]

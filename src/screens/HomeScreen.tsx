@@ -4,11 +4,19 @@ import { useSelector } from 'react-redux';
 import { RootState, useAppDispatch } from '../store';
 import { fetchPosts } from '../store/postsSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import HorizontalProfileList from '../components/HorizontalProfileList';
+import HorizontalProfileList from '../components/HorizontalScrollList';
+import HorizontalTrainerList from '../components/HorizontalTrainerList';
+import HorizontalDoctorList from '../components/HorizontalDoctorList';
+import userData from "../data/userList.json";  // JSON data
+import { userImages } from "../data/userImages";
 
 const HomeScreen = () => {
   const dispatch = useAppDispatch();
   const { data, loading, error } = useSelector((state: RootState) => state.posts);
+  const transformedData = userData.map((item) => ({
+    ...item,
+    image: userImages[item.image], // look up the require in userImages
+  }));
 
   useEffect(() => {
     dispatch(fetchPosts());
@@ -39,12 +47,19 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <HorizontalProfileList />
-      <FlatList
+      <HorizontalProfileList
+        userList={transformedData}
+        imageGradientColors={["#FF0000", "#FFA500"]} // Custom gradient for image border
+        iconGradientColors={["#FF0000", "#FFA500"]}  // Custom gradient for icon border
+      />
+      <HorizontalTrainerList />
+      <HorizontalDoctorList />
+      {/* <HorizontalDoctorList /> */}
+      {/* <FlatList
         data={data}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
-      />
+      /> */}
     </View>
   );
 };
