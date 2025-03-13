@@ -67,6 +67,7 @@ const HorizontalTrainerList = () => {
     );
 
     return (
+        <View style={styles.container}>
         <FlatList
             data={trainers}
             renderItem={renderItem}
@@ -75,12 +76,18 @@ const HorizontalTrainerList = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
         />
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    container: {
+        marginTop: 5,
+        // borderWidth: 2,
+        // borderColor: 'red',
+      },
     listContent: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 5,
     },
     itemContainer: {
         width: 100, // or adjust as needed

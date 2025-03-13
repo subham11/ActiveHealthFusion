@@ -99,9 +99,11 @@ export default HorizontalScrollList;
 const styles = StyleSheet.create({
   container: {
     marginTop: 5,
+    // borderWidth: 2,
+    // borderColor: 'red',
   },
   listContainer: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
   },
   item: {
     alignItems: "center",

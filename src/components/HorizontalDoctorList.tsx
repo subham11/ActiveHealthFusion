@@ -50,7 +50,7 @@ const HorizontalDoctorList = () => {
         <FontAwesomeIcon
           icon={item.icon}
           size={28}
-          color="#fff"
+          color="teal"
           style={styles.icon}
         />
       </View>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   itemContainer: {
     width: IMAGE_SIZE,
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 25,
   },
   imageWrapper: {
     width: IMAGE_SIZE,
@@ -90,7 +90,8 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     position: 'absolute',
-    bottom: 150,
+    //bottom: 50,
+    top: 0,
     right: -25,
     width: 40,
     height: 40,
