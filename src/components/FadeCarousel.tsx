@@ -1,5 +1,17 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Animated, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Animated,
+  StyleSheet,
+  FlatList,
+  Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+const CAROUSEL_HEIGHT = 350;
 
 const images = [
   require('../assets/images/Image_01.jpeg'),
@@ -8,28 +20,33 @@ const images = [
   require('../assets/images/Image_04.jpeg'),
 ];
 
-const FADE_DURATION = 500;     // Fade in/out duration in ms
-const INTERVAL_DURATION = 5000;  // Time between slides in ms
+const FADE_DURATION = 500;       // Duration for fade in/out in ms
+const INTERVAL_DURATION = 3000;    // Time between auto-slide in ms
 
 const FadeCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const flatListRef = useRef<FlatList>(null);
 
+  // Auto-advance timer: clears and restarts when currentIndex changes.
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      fadeOutAndNext();
+    const timer = setInterval(() => {
+      autoScroll();
     }, INTERVAL_DURATION);
-
-    return () => clearInterval(intervalId);
+    return () => clearInterval(timer);
   }, [currentIndex]);
 
-  const fadeOutAndNext = () => {
+  const autoScroll = () => {
+    // Fade out the current view
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: FADE_DURATION,
       useNativeDriver: true,
     }).start(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
+      const nextIndex = (currentIndex + 1) % images.length;
+      setCurrentIndex(nextIndex);
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      // Fade in the new view
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: FADE_DURATION,
@@ -38,35 +55,42 @@ const FadeCarousel = () => {
     });
   };
 
-  const handlePress = () => {
-    fadeOutAndNext();
+  // When the user swipes manually, update the index and reset opacity.
+  const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offset = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offset / screenWidth);
+    setCurrentIndex(index);
+    fadeAnim.setValue(1);
   };
 
-  return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <TouchableOpacity onPress={handlePress} activeOpacity={0.9} style={{width
-        : '100%', height: '100%'
-      }}>
-        <Image
-          source={images[currentIndex]}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={{ width: screenWidth, height: CAROUSEL_HEIGHT }}>
+      <Image source={item} style={styles.image} resizeMode="cover" />
+    </View>
+  );
 
-      {/* Dots for pagination */}
+  return (
+    <View style={styles.container}>
+      <Animated.FlatList
+        ref={flatListRef}
+        data={images}
+        keyExtractor={(_, index) => index.toString()}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onMomentumScrollEnd}
+        renderItem={renderItem}
+        style={{ opacity: fadeAnim }}
+      />
       <View style={styles.dotContainer}>
         {images.map((_, i) => (
           <View
             key={i}
-            style={[
-              styles.dot,
-              { opacity: i === currentIndex ? 1 : 0.4 },
-            ]}
+            style={[styles.dot, { opacity: i === currentIndex ? 1 : 0.4 }]}
           />
         ))}
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -74,20 +98,20 @@ export default FadeCarousel;
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: 250, // Adjust as needed
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: screenWidth,
+    height: CAROUSEL_HEIGHT,
     backgroundColor: '#eee',
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: screenWidth,
+    height: CAROUSEL_HEIGHT,
   },
   dotContainer: {
-    flexDirection: 'row',
     position: 'absolute',
     bottom: 10,
+    width: screenWidth,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   dot: {
     width: 8,

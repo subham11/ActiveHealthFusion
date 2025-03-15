@@ -8,7 +8,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import { useTranslation } from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faHome, faPodcast, faShop, faSearch, faPerson } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faPhotoFilm, faShop, faSearch, faPerson } from '@fortawesome/free-solid-svg-icons';
 
 const Tab = createBottomTabNavigator();
 
@@ -38,8 +38,8 @@ const BottomTabNavigator = () => {
             case 'Home':
               iconName = faHome;
               break;
-            case 'AddPost':
-              iconName = faPodcast;
+            case 'Posts':
+              iconName = faPhotoFilm;
               break;
             case 'Marketplace':
               iconName = faShop;
