@@ -12,6 +12,8 @@ import HorizontalListWithMedal from '../components/HorizontalListWithMedal';
 import userData from "../data/userList.json";  // JSON data
 import { userImages } from "../data/userImages";
 import { ScrollView } from 'react-native-gesture-handler';
+import GymCarousel from '../components/GymCarousel';
+import GradientBackground from '../components/GradientBackground';
 
 const HomeScreen = () => {
   const dispatch = useAppDispatch();
@@ -50,29 +52,32 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={{ height: 125 }}>
-        <HorizontalProfileList
-          userList={transformedData}
-          imageGradientColors={["#FF0000", "#FFA500"]} // Custom gradient for image border
-          iconGradientColors={["#FF0000", "#FFA500"]}  // Custom gradient for icon border
-        />
-      </View>
-      <View style={{ height: 190 }}>
-        {/* <Text style={styles.title}>{'asdfasdf'}</Text> */}
-        <HorizontalTrainerList />
-      </View>
-      <View style={{ height: 145 }}>
-        <HorizontalDoctorList />
-      </View>
-      <View style={{ height: 215 }}>
-        {/* <HorizontalAppleList /> */}
-        <HorizontalListWithMedal />
-      </View>
-      <FlatList
-        data={data}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-      />
+      <GradientBackground>
+        <View style={{ height: 125 }}>
+          <HorizontalProfileList
+            userList={transformedData}
+            imageGradientColors={["#FF0000", "#FFA500", '#FF5349']} // Custom gradient for image border
+            iconGradientColors={["#FF0000", "#FFA500", '#FF5349']}  // Custom gradient for icon border
+          />
+        </View>
+        <View style={{ height: 190 }}>
+          {/* <Text style={styles.title}>{'asdfasdf'}</Text> */}
+          <HorizontalTrainerList />
+        </View>
+        <View style={{ height: 145 }}>
+          <HorizontalDoctorList />
+        </View>
+        <View style={{ height: 215 }}>
+          {/* <HorizontalAppleList /> */}
+          <HorizontalListWithMedal />
+        </View>
+        {/* <GymCarousel /> */}
+        {/* <FlatList
+          data={data}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+        /> */}
+      </GradientBackground>
     </ScrollView>
   );
 };
@@ -82,7 +87,7 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 5,
+    //padding: 5,
     // borderWidth: 1,
     // borderColor: 'red',
   },

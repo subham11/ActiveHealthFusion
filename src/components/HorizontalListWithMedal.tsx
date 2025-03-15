@@ -27,6 +27,16 @@ const data = [
     image: require('../assets/images/users/Doc_01.jpg'),
     label: 'BEST NUTRITIONIST',
   },
+  {
+    id: '4',
+    image: require('../assets/images/users/Doc_01.jpg'),
+    label: 'BEST NUTRITIONIST',
+  },
+  {
+    id: '5',
+    image: require('../assets/images/users/Doc_01.jpg'),
+    label: 'BEST NUTRITIONIST',
+  },
 ];
 
 const ITEM_WIDTH = 120; // Adjust as needed
@@ -95,5 +105,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: 'white',
   },
 });

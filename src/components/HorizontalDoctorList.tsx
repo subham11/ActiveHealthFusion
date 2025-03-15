@@ -9,31 +9,31 @@ const doctors = [
   {
     id: '1',
     imageUri: require('../assets/images/users/Doc_01.jpg'),
-    label: 'BEST DOCTOR',
+    label: 'Physical Therapist',
     icon: faUserDoctor,
   },
   {
     id: '2',
     imageUri: require('../assets/images/users/Doc_01.jpg'),
-    label: 'BEST DOCTOR',
+    label: 'Physical Therapist',
     icon: faUserDoctor,
   },
   {
     id: '3',
     imageUri: require('../assets/images/users/Doc_01.jpg'),
-    label: 'BEST DOCTOR',
+    label: 'Physical Therapist',
     icon: faUserDoctor,
   },
   {
     id: '4',
     imageUri: require('../assets/images/users/Doc_01.jpg'),
-    label: 'BEST DOCTOR',
+    label: 'Physical Therapist',
     icon: faUserDoctor,
   },
   {
     id: '5',
     imageUri: require('../assets/images/users/Doc_01.jpg'),
-    label: 'BEST DOCTOR',
+    label: 'Physical Therapist',
     icon: faUserDoctor,
   },
 ];
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: 'white',
   },
   shadow: {
     shadowColor: "#000",
