@@ -14,6 +14,7 @@ import { userImages } from "../data/userImages";
 import { ScrollView } from 'react-native-gesture-handler';
 import GymCarousel from '../components/GymCarousel';
 import GradientBackground from '../components/GradientBackground';
+import FadeCarousel from '../components/FadeCarousel';
 
 const HomeScreen = () => {
   const dispatch = useAppDispatch();
@@ -71,6 +72,7 @@ const HomeScreen = () => {
           {/* <HorizontalAppleList /> */}
           <HorizontalListWithMedal />
         </View>
+        <FadeCarousel />
         {/* <GymCarousel /> */}
         {/* <FlatList
           data={data}

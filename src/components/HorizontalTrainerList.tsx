@@ -37,7 +37,7 @@ const trainers = [
         icon: faTrophy,
     },
     {
-        id: '3',
+        id: '4',
         imageUri: require('../assets/images/users/UserProfile.jpg'),
         label: 'BEST TRAINER',
         icon: faTrophy,
