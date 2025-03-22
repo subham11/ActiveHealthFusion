@@ -1,5 +1,5 @@
 // ViewCartScreen.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,22 +7,22 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { updateCart } from '../store/cartSlice';
 
-// Define a type for a product item.
-// Make sure your marketplaceData.ts uses a matching interface.
 interface ProductItem {
   id: string;
   title: string;
   image: any;
   price: number;
+  quantity?: number;
 }
 
-// Define the route parameters for ViewCartScreen.
 interface ViewCartRouteParams {
   cartItems: ProductItem[];
 }
@@ -30,19 +30,79 @@ interface ViewCartRouteParams {
 const ViewCartScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  // Extract cartItems from route parameters.
-  const { cartItems } = route.params as ViewCartRouteParams;
+  const dispatch = useDispatch();
+  const { cartItems: initialCartItems } = route.params as ViewCartRouteParams;
 
-  // Calculate the total price.
-  const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
+  // Ensure each item has a quantity (defaulting to 1) and a unique id.
+  const [cartItems, setCartItems] = useState<ProductItem[]>(
+    initialCartItems.map(item => ({ ...item, quantity: item.quantity ?? 1 }))
+  );
 
-  // Render each cart item.
+  // Update global cart state whenever the local cartItems change.
+  useEffect(() => {
+    dispatch(updateCart(cartItems));
+  }, [cartItems, dispatch]);
+
+  // Calculate total price.
+  const totalPrice = cartItems.reduce(
+    (sum, item) => sum + item.price * (item.quantity || 1),
+    0
+  );
+
+  // Increase quantity for the specified item.
+  const handleIncrement = (id: string) => {
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+      )
+    );
+  };
+
+  // Decrease quantity for the specified item.
+  // If quantity would become 0, remove the item.
+  const handleDecrement = (id: string) => {
+    setCartItems(prevItems =>
+      prevItems.reduce<ProductItem[]>((acc, item) => {
+        if (item.id === id) {
+          const newQuantity = (item.quantity || 1) - 1;
+          if (newQuantity > 0) {
+            acc.push({ ...item, quantity: newQuantity });
+          }
+          // Otherwise, item is removed.
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, [])
+    );
+  };
+
+  // Render a single cart item.
   const renderCartItem = ({ item }: { item: ProductItem }) => (
     <View style={styles.cartItem}>
       <Image source={item.image} style={styles.cartItemImage} />
       <View style={styles.cartItemInfo}>
         <Text style={styles.cartItemTitle}>{item.title}</Text>
-        <Text style={styles.cartItemPrice}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.cartItemPrice}>
+          ${item.price.toFixed(2)} x {item.quantity} = $
+          {(item.price * (item.quantity || 1)).toFixed(2)}
+        </Text>
+        {/* Quantity selector */}
+        <View style={styles.quantityContainer}>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={() => handleDecrement(item.id)}
+          >
+            <Text style={styles.quantityButtonText}>–</Text>
+          </TouchableOpacity>
+          <Text style={styles.quantityText}>{item.quantity}</Text>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={() => handleIncrement(item.id)}
+          >
+            <Text style={styles.quantityButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -134,6 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   cartItemInfo: {
+    flex: 1,
     marginLeft: 12,
     justifyContent: 'center',
   },
@@ -146,6 +207,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginTop: 4,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  quantityButton: {
+    backgroundColor: '#FF4500',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  quantityButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  quantityText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
   },
   emptyContainer: {
     flex: 1,
