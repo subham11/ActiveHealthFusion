@@ -151,7 +151,7 @@ const MarketplaceScreen = () => {
         <TouchableOpacity style={styles.addCartButton} onPress={() => handleAddToCart(item)}>
           <Text style={styles.buttonText}>Add To Cart</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.viewDetailsButton} onPress={() => { /* Handle View Details */ }}>
+        <TouchableOpacity style={styles.viewDetailsButton} onPress={() => navigation.navigate('ProductDetails', { product: item })}>
           <Text style={styles.buttonText}>View Details</Text>
         </TouchableOpacity>
       </View>
