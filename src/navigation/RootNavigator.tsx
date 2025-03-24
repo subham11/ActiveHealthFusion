@@ -5,6 +5,7 @@ import LoginScreen from '../screens/LoginScreen';
 import DrawerNavigator from './DrawerNavigator'; // We'll create a Drawer containing bottom tabs + settings
 import ViewCartScreen from '../screens/ViewCartScreen';
 import ProductDetailsScreen from '../screens/ProductDetailsScreen';
+import ViewProfileScreen from '../screens/ViewProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,7 @@ const RootNavigator = () => {
       <Stack.Screen name="Main" component={DrawerNavigator} />
       <Stack.Screen name="ViewCart" component={ViewCartScreen} />
       <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+      <Stack.Screen name="ViewProfile" component={ViewProfileScreen} />
     </Stack.Navigator>
   );
 };

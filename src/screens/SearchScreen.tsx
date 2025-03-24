@@ -11,14 +11,18 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  Image,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronDown, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faTimesCircle, faStar } from '@fortawesome/free-solid-svg-icons';
+import { SPORTS_CATEGORIES_DATA } from '../data/sportsData';
 
 const { width, height } = Dimensions.get('window');
 
-// Example categories for the Filter Modal left side
-const FILTER_CATEGORIES = [
+const SEARCH_USER_TYPES = ['Users', 'Nutritionists', 'Trainers'];
+
+const BASE_FILTER_CATEGORIES = [
   'Quick Filters',
   'Size',
   'Color',
@@ -34,8 +38,6 @@ const FILTER_CATEGORIES = [
   'Multipack Set',
 ];
 
-// Example sub-filters for each category
-// In a real app, you might fetch or store this in a data structure.
 const FILTER_OPTIONS: Record<string, { label: string; checked: boolean }[]> = {
   'Quick Filters': [
     { label: 'Top Brands', checked: false },
@@ -53,20 +55,16 @@ const FILTER_OPTIONS: Record<string, { label: string; checked: boolean }[]> = {
     { label: 'L', checked: false },
     { label: 'XL', checked: false },
     { label: 'XXL', checked: false },
-    // etc.
   ],
   Color: [
     { label: 'Red', checked: false },
     { label: 'Blue', checked: false },
     { label: 'Green', checked: false },
-    // etc.
   ],
   Brand: [
-    { label: 'Roadster', checked: false },
-    { label: 'H&M', checked: false },
-    { label: 'Mast & Harbour', checked: false },
-    { label: 'HERE&NOW', checked: false },
-    // etc.
+    { label: 'Brand A', checked: false },
+    { label: 'Brand B', checked: false },
+    { label: 'Brand C', checked: false },
   ],
   'Country of Origin': [
     { label: 'India', checked: false },
@@ -97,7 +95,6 @@ const FILTER_OPTIONS: Record<string, { label: string; checked: boolean }[]> = {
   'Multipack Set': [],
 };
 
-// Sort options for the Sort Modal
 const SORT_OPTIONS = [
   'Price: High to Low',
   'Popularity',
@@ -106,86 +103,223 @@ const SORT_OPTIONS = [
   'Customer Rating',
 ];
 
-// The dropdown items for the search user types
-const SEARCH_USER_TYPES = ['Users', 'Nutritionists', 'Trainers'];
+const SPORTS_FILTER_CATEGORY = 'Sports';
+
+// Dummy trainer profile data with profile images.
+// Note: All trainer profiles use the same image path ('../assets/images/Image_01.jpeg') for demo.
+interface TrainerProfile {
+  id: string;
+  username: string;
+  fullName: string;
+  rating: number;
+  shortDescription: string;
+  profileImage: any;
+}
+
+const DUMMY_TRAINER_PROFILES: TrainerProfile[] = [
+  {
+    id: 'tr1',
+    username: 'johndoe',
+    fullName: 'John Doe',
+    rating: 4.5,
+    shortDescription: 'Expert in weightlifting and strength training with 10+ years experience.',
+    profileImage: require('../assets/images/Image_01.jpeg'),
+  },
+  {
+    id: 'tr2',
+    username: 'janesmith',
+    fullName: 'Jane Smith',
+    rating: 4.0,
+    shortDescription: 'Certified trainer specializing in bodyweight exercises and flexibility.',
+    profileImage: require('../assets/images/Image_01.jpeg'),
+  },
+  {
+    id: 'tr3',
+    username: 'mikejohnson',
+    fullName: 'Mike Johnson',
+    rating: 5.0,
+    shortDescription: 'Passionate about bodybuilding and helping clients reach their potential.',
+    profileImage: require('../assets/images/Image_01.jpeg'),
+  },
+  {
+    id: 'tr4',
+    username: 'alicebrown',
+    fullName: 'Alice Brown',
+    rating: 4.2,
+    shortDescription: 'Focuses on cardiovascular fitness and personalized training programs.',
+    profileImage: require('../assets/images/Image_01.jpeg'),
+  },
+];
+
+// StarRating component.
+const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    stars.push(
+      <FontAwesomeIcon
+        key={i}
+        icon={faStar}
+        size={14}
+        color={i <= Math.floor(rating) ? '#FFB300' : '#ccc'}
+        style={{ marginRight: 2 }}
+      />
+    );
+  }
+  return <View style={{ flexDirection: 'row' }}>{stars}</View>;
+};
 
 const SearchScreen: React.FC = () => {
-  // State for dropdown
+  const navigation = useNavigation();
+
+  // Search bar state.
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState(SEARCH_USER_TYPES[0]);
-
-  // State for text input
   const [searchText, setSearchText] = useState('');
 
-  // State for modals
+  // Modal states.
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-
-  // State for selected sort option
   const [selectedSortOption, setSelectedSortOption] = useState('');
 
-  // Filter UI states
-  const [activeFilterCategory, setActiveFilterCategory] = useState<string>(
-    FILTER_CATEGORIES[0]
-  );
+  // Filter state.
+  const [activeFilterCategory, setActiveFilterCategory] = useState<string>(BASE_FILTER_CATEGORIES[0]);
   const [filterData, setFilterData] = useState(FILTER_OPTIONS);
 
-  // Toggle check for sub-filter
-  const handleToggleFilter = (category: string, label: string) => {
-    setFilterData((prev) => {
-      const newCategoryOptions = prev[category].map((opt) =>
-        opt.label === label ? { ...opt, checked: !opt.checked } : opt
-      );
-      return {
-        ...prev,
-        [category]: newCategoryOptions,
-      };
-    });
-  };
+  // Sports accordion state.
+  const [openSportsCategories, setOpenSportsCategories] = useState<Record<string, boolean>>({});
+  const [selectedSports, setSelectedSports] = useState<Record<string, boolean>>({});
 
-  // Clear all filters
+  // Trainer search results state.
+  const [trainerResults, setTrainerResults] = useState<TrainerProfile[]>([]);
+
+  // Merge filter categories.
+  const mergedFilterCategories = selectedUserType === 'Trainers'
+    ? [...BASE_FILTER_CATEGORIES, SPORTS_FILTER_CATEGORY]
+    : BASE_FILTER_CATEGORIES;
+
+  // Clear filters.
   const handleClearAllFilters = () => {
     const resetData: Record<string, { label: string; checked: boolean }[]> = {};
     for (const cat of Object.keys(filterData)) {
-      resetData[cat] = filterData[cat].map((opt) => ({ ...opt, checked: false }));
+      resetData[cat] = filterData[cat].map(opt => ({ ...opt, checked: false }));
     }
     setFilterData(resetData);
+    setOpenSportsCategories({});
+    setSelectedSports({});
   };
 
-  // Apply filters (just closes the modal in this example)
   const handleApplyFilters = () => {
     setFilterModalVisible(false);
   };
 
-  // Sort option selected
-  const handleSelectSortOption = (option: string) => {
-    setSelectedSortOption(option);
-  };
+  // Render base sub-filter item.
+  const renderSubFilterItem = ({ item }: { item: { label: string; checked: boolean } }) => (
+    <TouchableOpacity
+      style={styles.subFilterItem}
+      onPress={() =>
+        setFilterData(prev => {
+          const newOptions = prev[activeFilterCategory].map(opt =>
+            opt.label === item.label ? { ...opt, checked: !opt.checked } : opt
+          );
+          return { ...prev, [activeFilterCategory]: newOptions };
+        })
+      }
+    >
+      <View style={styles.subFilterRadioCircle}>
+        {item.checked && <View style={styles.subFilterRadioFill} />}
+      </View>
+      <Text style={styles.subFilterLabel}>{item.label}</Text>
+    </TouchableOpacity>
+  );
 
-  // Render a sub-filter item (checkbox)
-  const renderSubFilterItem = ({
-    item,
-  }: {
-    item: { label: string; checked: boolean };
-  }) => {
+  // Sports Accordion with checkboxes.
+  const SportsAccordion: React.FC = () => {
     return (
-      <TouchableOpacity
-        style={styles.subFilterItem}
-        onPress={() => handleToggleFilter(activeFilterCategory, item.label)}
-      >
-        <View style={styles.subFilterRadioCircle}>
-          {item.checked && <View style={styles.subFilterRadioFill} />}
-        </View>
-        <Text style={styles.subFilterLabel}>{item.label}</Text>
-      </TouchableOpacity>
+      <ScrollView>
+        {SPORTS_CATEGORIES_DATA.map(cat => (
+          <View key={cat.Category} style={styles.accordionItem}>
+            <TouchableOpacity
+              onPress={() =>
+                setOpenSportsCategories(prev => ({
+                  ...prev,
+                  [cat.Category]: !prev[cat.Category],
+                }))
+              }
+              style={styles.accordionHeader}
+            >
+              <Text style={styles.accordionHeaderText}>{cat.Category}</Text>
+            </TouchableOpacity>
+            {openSportsCategories[cat.Category] && (
+              <View style={styles.accordionContent}>
+                {cat.Subcategories.map(sub => (
+                  <View key={sub.Subcategory} style={styles.subCategoryContainer}>
+                    <Text style={styles.subCategoryTitle}>{sub.Subcategory}</Text>
+                    {sub.Sports.map(sport => {
+                      const key = `${cat.Category}-${sub.Subcategory}-${sport}`;
+                      const isSelected = selectedSports[key] || false;
+                      return (
+                        <TouchableOpacity
+                          key={sport}
+                          style={styles.sportItemContainer}
+                          onPress={() =>
+                            setSelectedSports(prev => ({
+                              ...prev,
+                              [key]: !prev[key],
+                            }))
+                          }
+                        >
+                          <View style={styles.checkbox}>
+                            {isSelected && <View style={styles.checkboxFill} />}
+                          </View>
+                          <Text style={styles.sportItemText}>{sport}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        ))}
+      </ScrollView>
     );
   };
 
+  // When the search key is pressed in the keyboard.
+  const handleSearchSubmit = () => {
+    if (searchText.trim().length < 3) {
+      console.log('Please enter at least 3 characters to search.');
+      setTrainerResults([]);
+    } else if (selectedUserType === 'Trainers') {
+      // For demo purposes, use dummy trainer data.
+      setTrainerResults(DUMMY_TRAINER_PROFILES);
+    } else {
+      setTrainerResults([]);
+      // Implement search logic for other user types if needed.
+    }
+  };
+
+  // Render a trainer profile suggestion.
+  const renderTrainerProfile = ({ item }: { item: TrainerProfile }) => (
+    <TouchableOpacity
+      style={styles.trainerCard}
+      onPress={() => navigation.navigate('ViewProfile', { trainer: item })}
+    >
+      <Image source={item.profileImage} style={styles.trainerImage} />
+      <View style={styles.trainerInfo}>
+        <Text style={styles.trainerUsername}>{item.username}</Text>
+        <Text style={styles.trainerFullName}>{item.fullName}</Text>
+        <StarRating rating={item.rating} />
+        <Text style={styles.trainerDescription}>{item.shortDescription}</Text>
+        <Text style={styles.viewMoreText}>View More</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header / Search Bar */}
+      {/* Search Bar */}
       <View style={styles.searchBarContainer}>
-        {/* Dropdown for user type */}
         <TouchableOpacity
           style={styles.dropdown}
           onPress={() => setDropdownVisible(!dropdownVisible)}
@@ -195,7 +329,7 @@ const SearchScreen: React.FC = () => {
         </TouchableOpacity>
         {dropdownVisible && (
           <View style={styles.dropdownList}>
-            {SEARCH_USER_TYPES.map((type) => (
+            {SEARCH_USER_TYPES.map(type => (
               <TouchableOpacity
                 key={type}
                 style={styles.dropdownListItem}
@@ -209,22 +343,38 @@ const SearchScreen: React.FC = () => {
             ))}
           </View>
         )}
-
-        {/* TextInput */}
         <TextInput
           style={styles.searchInput}
           placeholder={`Search ${selectedUserType}...`}
           value={searchText}
-          onChangeText={setSearchText}
+          onChangeText={(text) => {
+            setSearchText(text);
+            if (text.trim().length < 3) setTrainerResults([]);
+          }}
+          returnKeyType="search"
+          onSubmitEditing={handleSearchSubmit}
         />
       </View>
 
-      {/* The rest of the screen content (results, etc.) could go here. */}
-      <View style={{ flex: 1 }}>
-        <Text style={styles.demoText}>
-          (Demo) Searching for "{searchText}" in "{selectedUserType}"
-        </Text>
-      </View>
+      {/* Trainer Suggestions */}
+      {selectedUserType === 'Trainers' && trainerResults.length > 0 && (
+        <FlatList
+          data={trainerResults}
+          keyExtractor={(item) => item.id}
+          renderItem={renderTrainerProfile}
+          style={styles.trainerList}
+          contentContainerStyle={{ padding: 8 }}
+        />
+      )}
+
+      {/* If no trainer results, show demo text */}
+      {trainerResults.length === 0 && (
+        <View style={{ flex: 1 }}>
+          <Text style={styles.demoText}>
+            (Demo) Searching for "{searchText}" in "{selectedUserType}"
+          </Text>
+        </View>
+      )}
 
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
@@ -257,24 +407,19 @@ const SearchScreen: React.FC = () => {
                 <FontAwesomeIcon icon={faTimesCircle} size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            {SORT_OPTIONS.map((option) => (
+            {SORT_OPTIONS.map(option => (
               <TouchableOpacity
                 key={option}
                 style={styles.sortOptionItem}
-                onPress={() => handleSelectSortOption(option)}
+                onPress={() => setSelectedSortOption(option)}
               >
                 <View
                   style={[
                     styles.sortOptionRadio,
-                    {
-                      borderColor:
-                        selectedSortOption === option ? '#FF4500' : '#ccc',
-                    },
+                    { borderColor: selectedSortOption === option ? '#FF4500' : '#ccc' },
                   ]}
                 >
-                  {selectedSortOption === option && (
-                    <View style={styles.sortOptionRadioFill} />
-                  )}
+                  {selectedSortOption === option && <View style={styles.sortOptionRadioFill} />}
                 </View>
                 <Text style={styles.sortOptionLabel}>{option}</Text>
               </TouchableOpacity>
@@ -307,13 +452,15 @@ const SearchScreen: React.FC = () => {
                 <Text style={styles.clearAllText}>CLEAR ALL</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Body: Two columns - left categories, right subfilters */}
+            {/* Body: Two columns - left: filter categories; right: subfilters */}
             <View style={styles.filterModalBody}>
-              {/* Left: categories */}
               <View style={styles.filterCategoryList}>
                 <FlatList
-                  data={FILTER_CATEGORIES}
+                  data={
+                    selectedUserType === 'Trainers'
+                      ? [...BASE_FILTER_CATEGORIES, SPORTS_FILTER_CATEGORY]
+                      : BASE_FILTER_CATEGORIES
+                  }
                   keyExtractor={(item) => item}
                   renderItem={({ item }) => {
                     const isActive = item === activeFilterCategory;
@@ -335,16 +482,18 @@ const SearchScreen: React.FC = () => {
                   }}
                 />
               </View>
-              {/* Right: subfilters for the active category */}
               <View style={styles.filterSubList}>
-                <FlatList
-                  data={filterData[activeFilterCategory]}
-                  keyExtractor={(item) => item.label}
-                  renderItem={renderSubFilterItem}
-                />
+                {activeFilterCategory === SPORTS_FILTER_CATEGORY ? (
+                  <SportsAccordion />
+                ) : (
+                  <FlatList
+                    data={filterData[activeFilterCategory]}
+                    keyExtractor={(item) => item.label}
+                    renderItem={({ item }) => renderSubFilterItem({ item })}
+                  />
+                )}
               </View>
             </View>
-
             {/* Footer */}
             <View style={styles.filterModalFooter}>
               <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
@@ -364,10 +513,7 @@ const SearchScreen: React.FC = () => {
 export default SearchScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
   /***********************
    * Search Bar
    ***********************/
@@ -390,10 +536,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  dropdownText: {
-    fontSize: 14,
-    color: '#333',
-  },
+  dropdownText: { fontSize: 14, color: '#333' },
   dropdownList: {
     position: 'absolute',
     top: 48,
@@ -404,15 +547,8 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     zIndex: 999,
   },
-  dropdownListItem: {
-    padding: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  dropdownListItemText: {
-    fontSize: 14,
-    color: '#333',
-  },
+  dropdownListItem: { padding: 8, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  dropdownListItemText: { fontSize: 14, color: '#333' },
   searchInput: {
     flex: 1,
     borderWidth: 1,
@@ -422,7 +558,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   /***********************
-   * Demo
+   * Demo Text
    ***********************/
   demoText: {
     marginTop: 16,
@@ -430,6 +566,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+  /***********************
+   * Trainer Profiles
+   ***********************/
+  trainerList: { backgroundColor: '#fff' },
+  trainerCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 12,
+    marginVertical: 6,
+    marginHorizontal: 12,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  trainerImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  trainerInfo: { flex: 1, justifyContent: 'center' },
+  trainerUsername: { fontSize: 14, color: '#FF4500', fontWeight: 'bold' },
+  trainerFullName: { fontSize: 16, fontWeight: 'bold', color: '#333', marginVertical: 4 },
+  trainerDescription: { fontSize: 14, color: '#666', marginBottom: 4 },
+  viewMoreText: { fontSize: 14, color: '#FF4500', fontWeight: 'bold' },
   /***********************
    * Bottom Bar
    ***********************/
@@ -439,16 +603,8 @@ const styles = StyleSheet.create({
     borderTopColor: '#eee',
     backgroundColor: '#fff',
   },
-  bottomBarButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  bottomBarButtonText: {
-    fontSize: 16,
-    color: '#FF4500',
-    fontWeight: 'bold',
-  },
+  bottomBarButton: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+  bottomBarButtonText: { fontSize: 16, color: '#FF4500', fontWeight: 'bold' },
   /***********************
    * Sort Modal
    ***********************/
@@ -463,20 +619,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  modalHeaderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  sortOptionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  modalHeaderTitle: { fontSize: 18, fontWeight: 'bold' },
+  sortOptionItem: { flexDirection: 'row', alignItems: 'center', marginVertical: 8 },
   sortOptionRadio: {
     width: 20,
     height: 20,
@@ -487,30 +632,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sortOptionRadioFill: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FF4500',
-  },
-  sortOptionLabel: {
-    fontSize: 14,
-    color: '#333',
-  },
-  modalFooter: {
-    marginTop: 16,
-    alignItems: 'flex-end',
-  },
-  modalFooterButton: {
-    backgroundColor: '#FF4500',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  modalFooterButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  sortOptionRadioFill: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF4500' },
+  sortOptionLabel: { fontSize: 14, color: '#333' },
+  modalFooter: { marginTop: 16, alignItems: 'flex-end' },
+  modalFooterButton: { backgroundColor: '#FF4500', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  modalFooterButtonText: { color: '#fff', fontWeight: 'bold' },
   /***********************
    * Filter Modal
    ***********************/
@@ -520,90 +646,34 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
-  filterModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  filterModalHeaderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  clearAllText: {
-    color: '#FF4500',
-    fontWeight: 'bold',
-  },
-  filterModalBody: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  filterCategoryList: {
-    width: 120,
-    borderRightWidth: 1,
-    borderRightColor: '#eee',
-  },
-  filterCategoryItem: {
-    padding: 12,
-  },
-  activeFilterCategoryItem: {
-    backgroundColor: '#fff',
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF4500',
-  },
-  filterCategoryText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  activeFilterCategoryText: {
-    color: '#FF4500',
-    fontWeight: 'bold',
-  },
-  filterSubList: {
-    flex: 1,
-    padding: 12,
-  },
-  subFilterItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 6,
-  },
-  subFilterRadioCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: '#ccc',
-    marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  subFilterRadioFill: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FF4500',
-  },
-  subFilterLabel: {
-    fontSize: 14,
-    color: '#333',
-  },
-  filterModalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  closeButtonText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: 'bold',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    color: '#FF4500',
-    fontWeight: 'bold',
-  },
+  filterModalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  filterModalHeaderTitle: { fontSize: 18, fontWeight: 'bold' },
+  clearAllText: { color: '#FF4500', fontWeight: 'bold' },
+  filterModalBody: { flexDirection: 'row', flex: 1 },
+  filterCategoryList: { width: 120, borderRightWidth: 1, borderRightColor: '#eee' },
+  filterCategoryItem: { padding: 12 },
+  activeFilterCategoryItem: { backgroundColor: '#fff', borderLeftWidth: 4, borderLeftColor: '#FF4500' },
+  filterCategoryText: { fontSize: 14, color: '#333' },
+  activeFilterCategoryText: { color: '#FF4500', fontWeight: 'bold' },
+  filterSubList: { flex: 1, padding: 12 },
+  subFilterItem: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
+  subFilterRadioCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#ccc', marginRight: 8, justifyContent: 'center', alignItems: 'center' },
+  subFilterRadioFill: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF4500' },
+  subFilterLabel: { fontSize: 14, color: '#333' },
+  filterModalFooter: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderTopWidth: 1, borderTopColor: '#eee' },
+  closeButtonText: { fontSize: 16, color: '#666', fontWeight: 'bold' },
+  applyButtonText: { fontSize: 16, color: '#FF4500', fontWeight: 'bold' },
+  /***********************
+   * Sports Accordion Styles
+   ***********************/
+  accordionItem: { marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  accordionHeader: { paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#f9f9f9' },
+  accordionHeaderText: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+  accordionContent: { paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#fff' },
+  subCategoryContainer: { marginBottom: 8 },
+  subCategoryTitle: { fontSize: 13, fontWeight: 'bold', color: '#FF4500', marginBottom: 4 },
+  sportItemContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  checkbox: { width: 18, height: 18, borderWidth: 2, borderColor: '#ccc', borderRadius: 3, marginRight: 8, justifyContent: 'center', alignItems: 'center' },
+  checkboxFill: { width: 10, height: 10, backgroundColor: '#FF4500' },
+  sportItemText: { fontSize: 13, color: '#555' },
 });
