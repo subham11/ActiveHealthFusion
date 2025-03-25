@@ -105,8 +105,18 @@ const SORT_OPTIONS = [
 
 const SPORTS_FILTER_CATEGORY = 'Sports';
 
-// Dummy trainer profile data with profile images.
-// Note: All trainer profiles use the same image path ('../assets/images/Image_01.jpeg') for demo.
+/**
+ * Media item type
+ * singleImage | multipleImages | singleVideo | multipleVideos
+ */
+type MediaType = 'singleImage' | 'multipleImages' | 'singleVideo' | 'multipleVideos';
+
+interface TrainerMediaItem {
+  id: string;
+  type: MediaType;
+  thumbnail: any; // local require(...) or remote URI
+}
+
 interface TrainerProfile {
   id: string;
   username: string;
@@ -114,8 +124,10 @@ interface TrainerProfile {
   rating: number;
   shortDescription: string;
   profileImage: any;
+  media?: TrainerMediaItem[];
 }
 
+// Updated dummy trainer profiles including a video placeholder
 const DUMMY_TRAINER_PROFILES: TrainerProfile[] = [
   {
     id: 'tr1',
@@ -124,6 +136,33 @@ const DUMMY_TRAINER_PROFILES: TrainerProfile[] = [
     rating: 4.5,
     shortDescription: 'Expert in weightlifting and strength training with 10+ years experience.',
     profileImage: require('../assets/images/Image_01.jpeg'),
+    media: [
+      {
+        id: 'm1',
+        type: 'singleImage',
+        thumbnail: require('../assets/images/Image_01.jpeg'),
+      },
+      {
+        id: 'm2',
+        type: 'multipleImages',
+        thumbnail: require('../assets/images/Image_01.jpeg'), // The new video placeholder
+      },
+      {
+        id: 'm3',
+        type: 'singleVideo',
+        thumbnail: require('../assets/images/Image_01.jpeg'), // The new video placeholder
+      },
+      {
+        id: 'm4',
+        type: 'multipleVideos',
+        thumbnail: require('../assets/images/Image_01.jpeg'), // The new video placeholder
+      },
+      {
+        id: 'm5',
+        type: 'singleVideo',
+        thumbnail: require('../assets/images/Image_01.jpeg'), // The new video placeholder
+      },
+    ],
   },
   {
     id: 'tr2',
@@ -132,6 +171,7 @@ const DUMMY_TRAINER_PROFILES: TrainerProfile[] = [
     rating: 4.0,
     shortDescription: 'Certified trainer specializing in bodyweight exercises and flexibility.',
     profileImage: require('../assets/images/Image_01.jpeg'),
+    // For demonstration, no media array here
   },
   {
     id: 'tr3',
@@ -151,7 +191,7 @@ const DUMMY_TRAINER_PROFILES: TrainerProfile[] = [
   },
 ];
 
-// StarRating component.
+// A simple StarRating component
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   const stars = [];
   for (let i = 1; i <= 5; i++) {
@@ -167,6 +207,8 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   }
   return <View style={{ flexDirection: 'row' }}>{stars}</View>;
 };
+
+// const { width, height } = Dimensions.get('window');
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -192,12 +234,11 @@ const SearchScreen: React.FC = () => {
   // Trainer search results state.
   const [trainerResults, setTrainerResults] = useState<TrainerProfile[]>([]);
 
-  // Merge filter categories.
+  // Merge filter categories
   const mergedFilterCategories = selectedUserType === 'Trainers'
     ? [...BASE_FILTER_CATEGORIES, SPORTS_FILTER_CATEGORY]
     : BASE_FILTER_CATEGORIES;
 
-  // Clear filters.
   const handleClearAllFilters = () => {
     const resetData: Record<string, { label: string; checked: boolean }[]> = {};
     for (const cat of Object.keys(filterData)) {
@@ -212,7 +253,7 @@ const SearchScreen: React.FC = () => {
     setFilterModalVisible(false);
   };
 
-  // Render base sub-filter item.
+  // Base sub-filter item
   const renderSubFilterItem = ({ item }: { item: { label: string; checked: boolean } }) => (
     <TouchableOpacity
       style={styles.subFilterItem}
@@ -232,7 +273,7 @@ const SearchScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  // Sports Accordion with checkboxes.
+  // Sports Accordion with checkboxes
   const SportsAccordion: React.FC = () => {
     return (
       <ScrollView>
@@ -285,21 +326,20 @@ const SearchScreen: React.FC = () => {
     );
   };
 
-  // When the search key is pressed in the keyboard.
+  // On pressing search
   const handleSearchSubmit = () => {
     if (searchText.trim().length < 3) {
       console.log('Please enter at least 3 characters to search.');
       setTrainerResults([]);
     } else if (selectedUserType === 'Trainers') {
-      // For demo purposes, use dummy trainer data.
+      // For demo, show all DUMMY_TRAINER_PROFILES
       setTrainerResults(DUMMY_TRAINER_PROFILES);
     } else {
       setTrainerResults([]);
-      // Implement search logic for other user types if needed.
     }
   };
 
-  // Render a trainer profile suggestion.
+  // Render trainer profile item
   const renderTrainerProfile = ({ item }: { item: TrainerProfile }) => (
     <TouchableOpacity
       style={styles.trainerCard}
@@ -349,14 +389,16 @@ const SearchScreen: React.FC = () => {
           value={searchText}
           onChangeText={(text) => {
             setSearchText(text);
-            if (text.trim().length < 3) setTrainerResults([]);
+            if (text.trim().length < 3) {
+              setTrainerResults([]);
+            }
           }}
           returnKeyType="search"
           onSubmitEditing={handleSearchSubmit}
         />
       </View>
 
-      {/* Trainer Suggestions */}
+      {/* Trainer Results */}
       {selectedUserType === 'Trainers' && trainerResults.length > 0 && (
         <FlatList
           data={trainerResults}
@@ -577,6 +619,7 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     marginHorizontal: 12,
     borderRadius: 8,
+    // Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
@@ -646,7 +689,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
-  filterModalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  filterModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
   filterModalHeaderTitle: { fontSize: 18, fontWeight: 'bold' },
   clearAllText: { color: '#FF4500', fontWeight: 'bold' },
   filterModalBody: { flexDirection: 'row', flex: 1 },
@@ -657,10 +706,25 @@ const styles = StyleSheet.create({
   activeFilterCategoryText: { color: '#FF4500', fontWeight: 'bold' },
   filterSubList: { flex: 1, padding: 12 },
   subFilterItem: { flexDirection: 'row', alignItems: 'center', marginVertical: 6 },
-  subFilterRadioCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#ccc', marginRight: 8, justifyContent: 'center', alignItems: 'center' },
+  subFilterRadioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   subFilterRadioFill: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF4500' },
   subFilterLabel: { fontSize: 14, color: '#333' },
-  filterModalFooter: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderTopWidth: 1, borderTopColor: '#eee' },
+  filterModalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
   closeButtonText: { fontSize: 16, color: '#666', fontWeight: 'bold' },
   applyButtonText: { fontSize: 16, color: '#FF4500', fontWeight: 'bold' },
   /***********************
@@ -673,7 +737,16 @@ const styles = StyleSheet.create({
   subCategoryContainer: { marginBottom: 8 },
   subCategoryTitle: { fontSize: 13, fontWeight: 'bold', color: '#FF4500', marginBottom: 4 },
   sportItemContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  checkbox: { width: 18, height: 18, borderWidth: 2, borderColor: '#ccc', borderRadius: 3, marginRight: 8, justifyContent: 'center', alignItems: 'center' },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 3,
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   checkboxFill: { width: 10, height: 10, backgroundColor: '#FF4500' },
   sportItemText: { fontSize: 13, color: '#555' },
 });
