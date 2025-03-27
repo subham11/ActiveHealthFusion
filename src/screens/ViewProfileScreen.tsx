@@ -3,13 +3,13 @@ import React from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   Image,
   Dimensions,
   FlatList,
+  SafeAreaView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -19,30 +19,48 @@ import {
   faImages,
   faVideo,
   faClone,
-  faStar
-} from '@fortawesome/free-solid-svg-icons'; // Example icons
-import { TrainerProfile, TrainerMediaItem } from '../types/TrainerProfile'; // or inline define
-import { DUMMY_MEDIA } from '../types/TrainerMediaItem';
+} from '@fortawesome/free-solid-svg-icons';
+import LinearGradient from 'react-native-linear-gradient';
+import Video from 'react-native-video';
+
+// Example types (adjust as needed)
+type MediaType = 'singleImage' | 'multipleImages' | 'singleVideo' | 'multipleVideos';
+interface TrainerMediaItem {
+  id: string;
+  type: MediaType;
+  thumbnail: any; // local require(...) or remote URI
+  // Possibly images?: any[]; videos?: any[];
+}
+
+interface TrainerProfile {
+  id: string;
+  username: string;
+  fullName: string;
+  rating: number;
+  shortDescription: string;
+  detailedDescription?: string;
+  profileImage?: any;
+  media?: TrainerMediaItem[];
+}
 
 const { width } = Dimensions.get('window');
-const GRID_ITEM_SIZE = (width - 48) / 3; // e.g. 3 columns with some padding
+const GRID_ITEM_SIZE = (width - 48) / 3; // for a 3-column layout
 
 const ViewProfileScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  // Assume route.params.trainer has a media array:
-  const { trainer } = route.params as {
-    trainer: TrainerProfile & { media?: TrainerMediaItem[] };
-  };
+  // Expecting route.params.trainer to be passed in
+  const { trainer } = route.params as { trainer: TrainerProfile };
 
+  // Example star rating function
   const renderStarRating = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
         <FontAwesomeIcon
           key={i}
-          icon={faStar} // or faStar if you prefer
+          icon={/* or faStar if you prefer */ faCamera}
           size={16}
           color={i <= Math.floor(rating) ? '#FFB300' : '#ccc'}
           style={{ marginRight: 2 }}
@@ -52,29 +70,33 @@ const ViewProfileScreen: React.FC = () => {
     return <View style={styles.starContainer}>{stars}</View>;
   };
 
-  // Decide which icon to show in top-left based on media type
-  const getOverlayIcon = (type: string) => {
+  // Choose an icon based on media type
+  const getOverlayIcon = (type: MediaType) => {
     switch (type) {
       case 'singleImage':
-        return faCamera;         // Single image icon
+        return faCamera;
       case 'multipleImages':
-        return faImages;         // Multiple images icon
+        return faImages;
       case 'singleVideo':
-        return faVideo;          // Single video icon
+        return faVideo;
       case 'multipleVideos':
-        // Example: a 'clone' icon or something to indicate multiple
-        return faClone;          
+        return faClone;
       default:
         return faCamera;
     }
   };
 
+  // Render each media item in a grid
   const renderMediaItem = ({ item }: { item: TrainerMediaItem }) => {
     const overlayIcon = getOverlayIcon(item.type);
     return (
-      <TouchableOpacity style={styles.mediaItem} onPress={() => {
-        // Handle media item tap, e.g. open gallery or video
-      }}>
+      <TouchableOpacity
+        style={styles.mediaItem}
+        onPress={() => {
+          // Navigate to MediaDetails (or handle directly)
+          navigation.navigate('MediaDetails', { mediaItem: item });
+        }}
+      >
         <Image source={item.thumbnail} style={styles.mediaImage} />
         <View style={styles.overlayIconContainer}>
           <FontAwesomeIcon icon={overlayIcon} size={16} color="#fff" />
@@ -84,70 +106,125 @@ const ViewProfileScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <FontAwesomeIcon icon={faArrowLeft} size={20} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Trainer Profile</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Profile Image */}
-        {trainer.profileImage && (
-          <Image
-            source={trainer.profileImage}
-            style={styles.profileImage}
-            resizeMode="cover"
-          />
-        )}
-        <Text style={styles.fullName}>{trainer.fullName}</Text>
-        <Text style={styles.username}>@{trainer.username}</Text>
-        {renderStarRating(trainer.rating)}
-        <Text style={styles.shortDescription}>{trainer.shortDescription}</Text>
-
-        <View style={styles.detailsSection}>
-          <Text style={styles.sectionTitle}>About Trainer</Text>
-          <Text style={styles.sectionContent}>
-            {trainer.detailedDescription || 'No additional details available.'}
-          </Text>
+    // Wrap the entire screen in a LinearGradient
+    <LinearGradient
+      colors={['#FF5349', '#FFA500']}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <FontAwesomeIcon icon={faArrowLeft} size={20} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Trainer Profile</Text>
         </View>
-        <Text>{`Demo Data :${trainer?.media?.length}`}</Text>
-        {/* Media Grid */}
-        {trainer.media && trainer.media.length > 0 && (
-          <View style={styles.mediaGridSection}>
-            <Text style={styles.sectionTitle}>Photos & Videos</Text>
-            <FlatList
-              data={trainer.media}
-              keyExtractor={(item) => item.id}
-              renderItem={renderMediaItem}
-              numColumns={3}
-              scrollEnabled={false} // let parent ScrollView handle scrolling
-              contentContainerStyle={styles.mediaGrid}
-            />
+
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* Profile Image */}
+          {trainer.profileImage && (
+            <View style={styles.profileImageContainer}>
+              <Image
+                source={trainer.profileImage}
+                style={styles.profileImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
+          <Text style={styles.fullName}>{trainer.fullName}</Text>
+          <Text style={styles.username}>@{trainer.username}</Text>
+          {renderStarRating(trainer.rating)}
+          <Text style={styles.shortDescription}>{trainer.shortDescription}</Text>
+
+          <View style={styles.detailsSection}>
+            <Text style={styles.sectionTitle}>About Trainer</Text>
+            <Text style={styles.sectionContent}>
+              {trainer.detailedDescription || 'No additional details available.'}
+            </Text>
+
+            {/* Demo data */}
+            <Text style={styles.demoDataText}>Demo Data :5</Text>
           </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Media Grid */}
+          {trainer.media && trainer.media.length > 0 && (
+            <View style={styles.mediaGridSection}>
+              <Text style={styles.sectionTitle}>Photos & Videos</Text>
+              <FlatList
+                data={trainer.media}
+                keyExtractor={(item) => item.id}
+                renderItem={renderMediaItem}
+                numColumns={3}
+                scrollEnabled={false} // let parent ScrollView handle scrolling
+                contentContainerStyle={styles.mediaGrid}
+              />
+            </View>
+          )}
+          <FlatList
+          data={trainer?.videos}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <View style={styles.videoContainer}>
+              {/* 
+                If item.videoUrl is a local require(...) or remote URI, 
+                pass it to react-native-video:
+              */}
+              <Video
+                source={item.videoUrl} // e.g. require('../assets/videos/video.mp4') or { uri: 'https://...' }
+                style={styles?.video}
+                controls
+                resizeMode="contain"
+              />
+              {/* Optional: If you want a thumbnail preview, you'd conditionally render an <Image> 
+                  or set a poster in react-native-video. 
+                  For example, poster={item.thumbnail} posterResizeMode="cover" 
+              */}
+            </View>
+          )}
+          // Additional styling if you want e.g. spacing between videos
+          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+        />
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 export default ViewProfileScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  gradientContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  videoContainer: {
+    width: width * 0.9, // each video takes full screen width
+    height: 250,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
   },
   header: {
     height: 50,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    // No border bottom since we have a gradient background
+    backgroundColor: 'transparent',
   },
   backButton: {
     marginRight: 16,
@@ -155,36 +232,42 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff', // White text to contrast the gradient
     flex: 1,
   },
   scrollContainer: {
     padding: 16,
     paddingBottom: 40, // extra padding
   },
-  profileImage: {
-    width: width * 0.9,
+  profileImageContainer: {
+    alignSelf: 'center',
+    width: '90%',
     height: 200,
     borderRadius: 12,
-    alignSelf: 'center',
-    marginBottom: 16,
-    // Shadow styling
+    overflow: 'hidden',
+    // Shadow for the profile image
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 4,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
   },
   fullName: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff', // White text for contrast
     textAlign: 'center',
     marginBottom: 4,
   },
   username: {
     fontSize: 16,
-    color: '#666',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -195,27 +278,32 @@ const styles = StyleSheet.create({
   },
   shortDescription: {
     fontSize: 16,
-    color: '#444',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 16,
   },
   detailsSection: {
     marginVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 12,
+    borderRadius: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 8,
   },
   sectionContent: {
     fontSize: 14,
-    color: '#555',
+    color: '#fff',
     lineHeight: 20,
   },
-  /****************************
-   * Media Grid
-   ****************************/
+  demoDataText: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#fff',
+  },
   mediaGridSection: {
     marginTop: 16,
   },
@@ -228,9 +316,15 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
     position: 'relative',
-    backgroundColor: '#eee',
-    borderRadius: 6,
+    borderRadius: 8,
     overflow: 'hidden',
+    // Shadow styling
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 3,
+    backgroundColor: '#fff',
   },
   mediaImage: {
     width: '100%',

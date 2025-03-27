@@ -110,6 +110,12 @@ const SPORTS_FILTER_CATEGORY = 'Sports';
  * singleImage | multipleImages | singleVideo | multipleVideos
  */
 type MediaType = 'singleImage' | 'multipleImages' | 'singleVideo' | 'multipleVideos';
+// Part of your TrainerProfile interface:
+interface TrainerVideoItem {
+  id: string;
+  videoUrl: any;       // Could be a remote URI string or local require(...)
+  thumbnail?: any;     // Optional: used if you want a preview image
+}
 
 interface TrainerMediaItem {
   id: string;
@@ -125,6 +131,7 @@ interface TrainerProfile {
   shortDescription: string;
   profileImage: any;
   media?: TrainerMediaItem[];
+  videos?: TrainerVideoItem[];
 }
 
 // Updated dummy trainer profiles including a video placeholder
@@ -161,6 +168,20 @@ const DUMMY_TRAINER_PROFILES: TrainerProfile[] = [
         id: 'm5',
         type: 'singleVideo',
         thumbnail: require('../assets/images/Image_01.jpeg'), // The new video placeholder
+      },
+    ],
+    videos: [
+      {
+        id: 'v1',
+        videoUrl: require('../assets/videos/Video_01.mp4'), // The new video placeholder
+      },
+      {
+        id: 'v2',
+        videoUrl: require('../assets/videos/Video_02.mp4'), // The new video placeholder
+      },
+      {
+        id: 'v3',
+        videoUrl: require('../assets/videos/Video_03.mp4'), // The new video placeholder
       },
     ],
   },

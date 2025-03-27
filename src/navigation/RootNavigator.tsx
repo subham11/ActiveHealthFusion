@@ -6,6 +6,7 @@ import DrawerNavigator from './DrawerNavigator'; // We'll create a Drawer contai
 import ViewCartScreen from '../screens/ViewCartScreen';
 import ProductDetailsScreen from '../screens/ProductDetailsScreen';
 import ViewProfileScreen from '../screens/ViewProfileScreen';
+import MediaDetailsScreen from '../screens/MediaDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ const RootNavigator = () => {
       <Stack.Screen name="ViewCart" component={ViewCartScreen} />
       <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
       <Stack.Screen name="ViewProfile" component={ViewProfileScreen} />
+      <Stack.Screen name="MediaDetails" component={MediaDetailsScreen} />
     </Stack.Navigator>
   );
 };
